@@ -1,0 +1,125 @@
+{{define "base"}}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>iWin 🛠</title>
+    <link rel="stylesheet" href="../static/main.css" />
+  </head>
+  <body id="devices">
+    <main>
+      {{with .Pending}} {{if gt (len (.Devices)) 0}}
+      <section>
+        <h2>Do you allow these devices to share files to your computer?</h2>
+        <div>
+          <ul>
+            {{range .Devices}}
+            <li>
+              <form class="verify-form">
+                <label>{{ .Name }}</label>
+                <input name="id" type="hidden" value="{{.Identifier}}" />
+                <button name="allow" type="submit" value="true">allow</button>
+                <button name="deny" type="submit" value="false">deny</button>
+              </form>
+            </li>
+            {{end}}
+          </ul>
+        </div>
+      </section>
+      {{end}} {{end}} {{with .Saved}}
+      <section>
+        <h2>Your devices</h2>
+        <div>
+          <ul>
+            {{if gt (len .Devices) 0}} {{range .Devices}}
+            <li>
+              <form class="remove-device-form">
+                <label>{{ .Name }}</label>
+                <input name="id" type="hidden" value="{{.Identifier}}" />
+                <button name="remove" type="submit">remove</button>
+              </form>
+            </li>
+            {{end}} {{else}}
+            <li>no registered devices</li>
+            {{end}}
+          </ul>
+        </div>
+      </section>
+      {{end}}
+      <a href="./">settings</a>
+    </main>
+  </body>
+  <script type="text/javascript">
+    const verifyDeviceForms = document.getElementsByClassName("verify-form");
+    const removeDeviceForms =
+      document.getElementsByClassName("remove-device-form");
+
+    for (let form of verifyDeviceForms) {
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        const isAllowed = event.submitter.value;
+        const id = form.getElementsByTagName("input")[0].value;
+
+        if (!id || id == "") return;
+
+        fetch("/verify", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            id: id,
+            allow: isAllowed,
+          }),
+        })
+          .then((response) => {
+            if (response.status === 200) {
+              alert("OK!");
+              window.location.href = "http://localhost:6789/devices";
+            } else {
+              console.log(response);
+              alert("Failed!");
+            }
+          })
+          .catch((error) => {
+            console.log(error);
+            alert("Server error!");
+          });
+      });
+    }
+
+    for (let form of removeDeviceForms) {
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        const id = form.getElementsByTagName("input")[0].value;
+
+        if (!id || id == "") return;
+
+        fetch("/removeDevice", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            id: id,
+          }),
+        })
+          .then((response) => {
+            if (response.status === 200) {
+              alert("OK!");
+              window.location.href = "http://localhost:6789/devices";
+            } else {
+              alert("Failed!");
+            }
+          })
+          .catch((error) => {
+            console.log(error);
+            alert("Server error!");
+          });
+      });
+    }
+  </script>
+</html>
+{{end}}

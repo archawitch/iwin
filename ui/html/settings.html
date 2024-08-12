@@ -1,0 +1,115 @@
+{{define "base"}}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>iWin 🛠</title>
+    <link rel="stylesheet" href="../static/main.css" />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
+      integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGt4FodqL8My0mA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"></script>
+  </head>
+  <body id="settings">
+    <input id="addr" type="hidden" value="{{.QRCodeData}}" />
+    <header>
+      <h1>Settings</h1>
+    </header>
+    <main>
+      <div id="qrcode"></div>
+      <form id="updatePath">
+        <input
+          type="text"
+          name="dst"
+          id="dst"
+          value="{{.Dst}}"
+          placeholder="place your destination path here" />
+        <button type="submit" value="save">save</button>
+      </form>
+      <div class="full">
+        <button id="refreshIP">refresh</button>
+        <button id="devices">devices</button>
+      </div>
+    </main>
+  </body>
+  <script type="text/javascript">
+    const addr = document.getElementById("addr");
+    const dst = document.getElementById("dst");
+
+    const qrcode = new QRCode(document.getElementById("qrcode"), {
+      text: addr.value,
+      width: 350,
+      height: 350,
+    });
+
+    // go to pending devices page
+    document.getElementById("devices").addEventListener("click", (event) => {
+      window.location.href = "http://localhost:6789/devices";
+    });
+
+    // refresh IP Address
+    document.getElementById("refreshIP").addEventListener("click", (event) => {
+      event.target.disabled = true;
+
+      fetch("/refresh", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      })
+        .then((response) => {
+          event.target.disabled = false;
+          if (response.status === 200) {
+            alert("Refreshed successfully!");
+          } else {
+            alert("Could not refresh!");
+          }
+        })
+        .catch((error) => {
+          event.target.disabled = false;
+          console.log(error);
+          alert("Server error!");
+        });
+    });
+
+    // update the destination path
+    document
+      .getElementById("updatePath")
+      .addEventListener("submit", (event) => {
+        event.preventDefault();
+        event.target.disabled = true;
+
+        const path = dst.value;
+
+        if (path.trim() == "") {
+          alert("Invalid path!");
+          return;
+        }
+
+        fetch("/settings", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({
+            dst: dst.value,
+          }),
+        })
+          .then((response) => {
+            event.target.disabled = false;
+            if (response.status === 200) {
+              alert("Updated successfully!");
+            } else {
+              alert("Invalid path!");
+            }
+          })
+          .catch((error) => {
+            event.target.disabled = false;
+            console.log(error);
+            alert("Server error!");
+          });
+      });
+  </script>
+</html>
+{{end}}
