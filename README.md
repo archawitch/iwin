@@ -14,13 +14,14 @@ You can follow these instructions to get a copy of this project and run it on yo
 
 ### Installation
 
-Clone this repository to your Windows machine and then follow the instructions at [iWin Share](https://github.com/archawitch/iwin-share) to install iWin share on your iOS device. After setting up your iOS device, you can follow these steps to register your device with the Windows PC.
-
-1. Open a terminal in your cloned folder and run `go run ./cmd`.
-2. Open a new tab in your browser and navigate to _localhost:6789_.
-3. Open the iWin share app on your iOS device and scan the QR code showing in the browser.
-4. A verification popup will appear. To register your device with the PC, click the "allow" button.
-5. Go back to the settings page and paste your desired uploaded folder in the text box. Then, click "save" button.
+1. Clone this repository to your Windows machine.
+2. Follow the instructions at [iWin Share](https://github.com/archawitch/iwin-share) to install iWin share on your iOS device.
+3. After setting up your iOS device, you can follow these steps to register your device with the Windows PC.
+    1. Open a terminal in your cloned folder and run `go run ./cmd`.
+    2. Open a new tab in your browser and navigate to _localhost:6789_.
+    3. Open the iWin share app on your iOS device and scan the QR code showing in the browser.
+    4. A verification popup will appear. To register your device with the PC, click the "allow" button.
+    5. Go back to the settings page and paste your desired uploaded folder in the text box. Then, click "save" button.
 
 ## Usage
 
