@@ -1,10 +1,10 @@
 # iWin (Windows)
 
-iWin is a tool for file sharing from iOS devices to Windows PCs. It is built with Go and Swift, and it follows the mDNS protocol and an HTTP-based Client-Server architecture. There are two parts that we use in this project: the first part is here and the other part is [iWin Share](https://github.com/archawitch/iwin-share).
+iWin is a tool for file sharing from iOS devices to Windows PCs. It is built with Go and Swift, and it follows the mDNS protocol and an HTTP-based Client-Server architecture. There are two parts that are used in this project: the first part is here and the other part is [iWin Share](https://github.com/archawitch/iwin-share).
 
 ## Getting Started
 
-You can follow these instructions to get a copy of the project and run it on your local machine for development or testing purposes.
+You can follow these instructions to get a copy of this project and run it on your local machine for development or testing purposes.
 
 ### Prerequisites
 
@@ -16,7 +16,7 @@ You can follow these instructions to get a copy of the project and run it on you
 
 Clone this repository to your Windows machine and then follow the instructions at [iWin Share](https://github.com/archawitch/iwin-share) to install iWin share on your iOS device. After setting up your iOS device, you can follow these steps to register your device with the Windows PC.
 
-1. Open a terminal in the cloned folder and run `go run ./cmd`.
+1. Open a terminal in your cloned folder and run `go run ./cmd`.
 2. Open a new tab in your browser and navigate to _localhost:6789_.
 3. Open the iWin share app on your iOS device and scan the QR code showing in the browser.
 4. A verification popup will appear. To register your device with the PC, click the "allow" button.
@@ -28,5 +28,6 @@ To run this application, you can run `go run ./cmd` in your terminal to start th
 
 ## Notes
 
+- The iOS device and the Windows PC need to be on the same local network.
 - If you want to check if the mDNS service is currently running or not, you can enter `dns-sd -B _iw._tcp` on the terminal.
-- If your PC is not running the mDNS service, you can fix this by clicking the "Refresh" button on the settings page.
+- If your PC is not running the mDNS service, you can fix this by clicking the "refresh" button on the settings page.
