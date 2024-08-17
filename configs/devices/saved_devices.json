@@ -1,3 +1,16 @@
 {
-  "devices": []
+  "devices": [
+    {
+      "name": "iPad Air 4",
+      "identifier": "3A304A04-7090-4B52-917B-BCBF25FB8230"
+    },
+    {
+      "name": "iPhone 15",
+      "identifier": "54EC0651-F514-449B-810B-543A6E992292"
+    },
+    {
+      "name": "HTTPBot",
+      "identifier": "1234"
+    }
+  ]
 }

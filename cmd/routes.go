@@ -24,7 +24,7 @@ func (app *application) routes() http.Handler {
 
 	router.Handler(http.MethodGet, "/", local.ThenFunc(app.settings))
 	router.Handler(http.MethodPost, "/settings", local.ThenFunc(app.settingsPost))
-	router.Handler(http.MethodGet, "/devices", local.ThenFunc(app.devices))
+	router.Handler(http.MethodGet, "/devices", local.ThenFunc(app.getDevices))
 	router.Handler(http.MethodPost, "/refresh", local.ThenFunc(app.refresh))
 	router.Handler(http.MethodPost, "/verify", local.ThenFunc(app.verifyDevicePost))
 	router.Handler(http.MethodPost, "/removeDevice", local.ThenFunc(app.removeDevice))

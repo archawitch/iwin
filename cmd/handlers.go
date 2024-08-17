@@ -1,43 +1,33 @@
 package main
 
 import (
+	"encoding/base64"
 	"errors"
 	"net/http"
 	"os"
+	"time"
+
+	"github.com/google/uuid"
 )
 
-type DeviceInfo struct {
-	Name 			string	`json:"name"`
-	Identifier		string	`json:"identifier"`
-}
-
-type DeviceList struct {
-	Devices		[]DeviceInfo	`json:"devices"`
-}
-
-type DeviceInfoForm struct {
-	Name 			string	`form:"name"`
-	Identifier		string	`form:"identifier"`
-}
-
-// Used to add the requested device to the pending list
+// Handle device addition when the iOS device requested to register to the server
 func (app *application) addDevice(w http.ResponseWriter, r *http.Request) {
 	// get requested device's information
-	client, err := app.getClientInfo(r)
+	device, err := app.getClientInfo(r)
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
 
 	// Check if the device is in the saved list or not
-	found, err := checkDevice(client)
+	exists, err := checkDeviceExist(device)
 	if err != nil {
-		app.serverError(w, err)
+		app.clientError(w, http.StatusBadRequest)
 		return
 	}
 
 	// If the device is already in the saved list, then reject the request
-	if found {
+	if exists {
 		response := map[string]any {
 			"message": "Already connected!",
 		}
@@ -45,17 +35,8 @@ func (app *application) addDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Add the device to pending list
-	var pdDevices DeviceList
-	err = readJSONFile(&pdDevices, pDVPath)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-	newDevice := DeviceInfo(client)
-	pdDevices.Devices = append(pdDevices.Devices, newDevice)
-
-	err = writeJSONFile(pdDevices, pDVPath)
+	// Add the device to the pending list
+	err = savePendingDevice(device)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -67,92 +48,94 @@ func (app *application) addDevice(w http.ResponseWriter, r *http.Request) {
 
 	// Open a url to verify the device
 	openURL("http://localhost:6789/devices")
+
+	app.infoLog.Printf("Request for Registration from %s\n", r.RemoteAddr)
 }
 
-// Used to authenticate the requested iOS device
+// Handle device connection when a valid device wanted to connect to the server
 func (app *application) connect(w http.ResponseWriter, r *http.Request) {	
-	// Get requested device info
-	client, err := app.getClientInfo(r)
+	// get requested device's information
+	device, err := app.getClientInfo(r)
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
 
 	// Check if the device is in the saved list or not
-	found, err := checkDevice(client)
+	exists, err := checkDeviceExist(device)
 	if err != nil {
-		app.serverError(w, err)
+		app.clientError(w, http.StatusBadRequest)
 		return
 	}
 	
-	// If not found, reject the connection
-	// Otherwise, accept the connection
-	if !found {
-		app.response(w, http.StatusNotFound, map[string]any {
-			"message": "Device not found",
-		})
+	// If not exist, reject the connection
+	// Otherwise, generate, save a random token and send its secret to the device for authentication
+	if !exists {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	secret := uuid.NewString()	// secret
+	expires := time.Now().Add(time.Minute * 5)	// lives for 5 mins
+	err = saveToken(Token{
+		DeviceId: device.Identifier,
+		Secret: secret,
+		ExpiredAt: expires,
+	})
+	if err != nil {
+		app.serverError(w, err)
 		return
 	}
 
 	app.response(w, http.StatusOK, map[string]any {
 		"message": "I'm ready, let's connect!",
+		"s": base64.StdEncoding.EncodeToString([]byte(secret)),
 	})
+
+	app.infoLog.Printf("Connected to %s\n", r.RemoteAddr)
 }
 
-// Used to upload content from the requested iOS device to the PC
-func (app *application) upload(w http.ResponseWriter, r *http.Request) {
-	var st settingsData
-
-	// Get the destination folder path to save
-	err := readJSONFile(&st, stPath)
+// Handle upload request when a valid device uploaded files to the server
+func (app *application) upload(w http.ResponseWriter, r *http.Request) {	
+	// Authenticate the device with its ID and secret
+	found, err := verifyToken(r)
 	if err != nil {
-		app.serverError(w, err)
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	
+	// If not found, then reject the request
+	if !found {
+		app.response(w, http.StatusBadRequest, map[string]any {"message": "Invalid token"})
 		return
 	}
 
 	// Validate the request form
-	err = r.ParseMultipartForm(60 << 20)	// maximum 60MB
+	err = r.ParseMultipartForm(50 << 20)	// maximum 50MB
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
 
 	// Get the form data
-	var id string	// client's identifier
 	var url string // URL sent by the client if any
 	var text string // text sent by the client if any
 	for key, vals := range r.MultipartForm.Value {
 		for _, val := range vals {
-			if key == "identifier" {
-				id = val
-			} else if key == "url" {
-				if val != "" {
-					url = val
-				}
-			} else if key == "text" {
-				if val != "" {
-					text = val
-				}
+			if key == "url" && val != "" {
+				url = val
+			} else if key == "text" && val != "" {
+				text = val
 			}
 		}
 	}
 
-	// If the requestor did not attach its ID with the form, then reject the request
-	if id == "" {
-		app.clientError(w, http.StatusBadRequest)
-		return
-	}
+	var st settingsData
 
-	// Check if the device is in saved devices or not
-	found, err := checkDevice(DeviceInfo{Name: "", Identifier: id})
+	// Get the destination folder path to save
+	err = readJSONFile(&st, SETTINGS_FILE_PATH)
 	if err != nil {
 		app.serverError(w, err)
-		return
-	}
-	
-	// If not found, then reject the request
-	if !found {
-		app.response(w, http.StatusNotFound, map[string]any {"message": "Device not found"})
 		return
 	}
 
@@ -185,41 +168,29 @@ func (app *application) upload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	app.response(w, http.StatusOK, map[string]any {
-		"message": "Files saved successfully",
+		"message": "Received all content successfully",
 	})
+
+	app.infoLog.Printf("Uploaded from %s\n", r.RemoteAddr)
 }
 
 
-/* --- AUTHENTICATION --- */
+/* --- DEVICES --- */
 
-type deviceData struct {
-	Pending	DeviceList
-	Saved		DeviceList
-}
-
-type verifyPostForm struct {
-	Id			string 	`form:"id"`
-	Allow		bool		`form:"allow"`	
-}
-
-type removeDeviceForm struct {
-	Id			string 	`form:"id"`
-}
-
-// Used to retrieve and display all devices to the devices page
-func (app *application) devices(w http.ResponseWriter, r *http.Request) {
+// Handle displaying all devices on the devices page
+func (app *application) getDevices(w http.ResponseWriter, r *http.Request) {
 	var pdDevices DeviceList
 	var svDevices DeviceList
 	
 	// Get pending devices
-	err := readJSONFile(&pdDevices, pDVPath)
+	err := readJSONFile(&pdDevices, PENDING_DEVICES_FILE_PATH)
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
 
 	// Get saved devices
-	err = readJSONFile(&svDevices, dvPath)
+	err = readJSONFile(&svDevices, DEVICES_FILE_PATH)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -231,7 +202,7 @@ func (app *application) devices(w http.ResponseWriter, r *http.Request) {
 	app.render(w, "devices", deviceData)
 }
 
-// Used to verify the device from the devices page
+// Handle device verification when the user clicks to verify the device on the devices page
 func (app *application) verifyDevicePost(w http.ResponseWriter, r *http.Request) {
 	var form verifyPostForm
 	
@@ -241,47 +212,10 @@ func (app *application) verifyDevicePost(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	
-	// Get pending devices
-	var pdDeviceList DeviceList
-	err = readJSONFile(&pdDeviceList, pDVPath)
+	err = saveDevice(form.Id, form.Allow)
 	if err != nil {
 		app.serverError(w, err)
 		return
-	}
-
-	// Remove the selected device from the pending devices
-	var device DeviceInfo
-	newPDDeviceList := &DeviceList{Devices: []DeviceInfo{}}
-	for _, dv := range(pdDeviceList.Devices) {
-		if dv.Identifier == form.Id {
-			device = dv
-			continue
-		}
-		newPDDeviceList.Devices = append(newPDDeviceList.Devices, dv)
-	}
-
-	err = writeJSONFile(*newPDDeviceList, pDVPath)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
-	// if we allow the device to connect to the server, then add the device to the allowed device list
-	// otherwise, we will not add it
-	if form.Allow {	
-		var deviceList DeviceList
-		err = readJSONFile(&deviceList, dvPath)
-		if err != nil {
-			app.serverError(w, err)
-			return
-		}
-		deviceList.Devices = append(deviceList.Devices, device)
-
-		err = writeJSONFile(deviceList, dvPath)
-		if err != nil {
-			app.serverError(w, err)
-			return
-		}
 	}
 
 	app.response(w, http.StatusOK, map[string]any {
@@ -289,7 +223,7 @@ func (app *application) verifyDevicePost(w http.ResponseWriter, r *http.Request)
 	})
 }
 
-// Used to remove the device from the devices page
+// Handle removing a specific device on the devices page
 func (app *application) removeDevice(w http.ResponseWriter, r *http.Request) {
 	var form removeDeviceForm
 	
@@ -298,25 +232,9 @@ func (app *application) removeDevice(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
-	
-	// Get the saved devices
-	var deviceList DeviceList
-	err = readJSONFile(&deviceList, dvPath)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
 
-	// Remove the selected device from the list
-	newDeviceList := &DeviceList{Devices: []DeviceInfo{}}
-	for _, dv := range(deviceList.Devices) {
-		if dv.Identifier != form.Id {
-			newDeviceList.Devices = append(newDeviceList.Devices, dv)
-		}
-	}
-
-	// Save the saved device list back
-	err = writeJSONFile(*newDeviceList, dvPath)
+	// Remove the device from the list
+	err = removeDevice(form.Id)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -330,25 +248,12 @@ func (app *application) removeDevice(w http.ResponseWriter, r *http.Request) {
 
 /* --- SETTINGS --- */
 
-type settingsData struct {
-	Dst    			string `json:"destination"`
-}
-
-type settingsForm struct {
-	QRCodeData 	string
-	Dst    			string
-}
-
-type settingsPostForm struct {
-	Dst		string `form:"dst"`
-}
-
-// Used to retrieve and display the HTTP server settings to the settings page
+// Handle retrieving and displaying the HTTP server settings to the settings page
 func (app *application) settings(w http.ResponseWriter, r *http.Request) {
 	var st settingsData
 	
 	// Get settings info
-	err := readJSONFile(&st, stPath)
+	err := readJSONFile(&st, SETTINGS_FILE_PATH)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -365,7 +270,7 @@ func (app *application) settings(w http.ResponseWriter, r *http.Request) {
 	app.render(w, "settings", data)
 }
 
-// Used to update the HTTP server settings
+// Handle updating the HTTP server settings
 func (app *application) settingsPost(w http.ResponseWriter, r *http.Request) {
 	var form settingsPostForm
 	
@@ -398,7 +303,7 @@ func (app *application) settingsPost(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// Used to check current IP Address and restart the mDNS service
+// Handle when the user clicks refresh to check current IP Address and restart the mDNS service
 func (app *application) refresh(w http.ResponseWriter, r *http.Request) {
 	err := app.refreshMDNSService()
 	if err != nil {

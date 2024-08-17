@@ -1,0 +1,73 @@
+ERROR	2024/08/13 09:54:13 main.go:126: Failed to start mDNS service: dial udp 8.8.8.8:80: connect: A socket operation was attempted to an unreachable network.
+ERROR	2024/08/13 20:31:33 handlers.go:105: json: cannot unmarshal object into Go value of type []main.Token
+goroutine 20 [running]:
+runtime/debug.Stack()
+	C:/Program Files/Go/src/runtime/debug/stack.go:24 +0x5e
+main.(*application).serverError(0xc000091400, {0xedd7b0, 0xc000276000}, {0xedbb00?, 0xc0002621e0?})
+	D:/___dev___/go/projects/i-win/cmd/helpers.go:27 +0x52
+main.(*application).connect(0xc000091400, {0xedd7b0, 0xc000276000}, 0x80?)
+	D:/___dev___/go/projects/i-win/cmd/handlers.go:105 +0x239
+net/http.HandlerFunc.ServeHTTP(0xadc660?, {0xedd7b0?, 0xc000276000?}, 0x7?)
+	C:/Program Files/Go/src/net/http/server.go:2166 +0x29
+github.com/julienschmidt/httprouter.(*Router).HandlerFunc.(*Router).Handler.func1({0xedd7b0?, 0xc000276000?}, 0xc000252e70?, {0x0?, 0xc00003d840?, 0x9da065?})
+	C:/Users/dell/go/pkg/mod/github.com/julienschmidt/httprouter@v1.3.0/router.go:275 +0xee
+github.com/julienschmidt/httprouter.(*Router).ServeHTTP(0xc00008a120, {0xedd7b0, 0xc000276000}, 0xc00026e000)
+	C:/Users/dell/go/pkg/mod/github.com/julienschmidt/httprouter@v1.3.0/router.go:387 +0x7eb
+main.(*application).clearPostFormData-fm.(*application).clearPostFormData.func1({0xedd7b0, 0xc000276000}, 0xc00026e000)
+	D:/___dev___/go/projects/i-win/cmd/middleware.go:49 +0x42
+net/http.HandlerFunc.ServeHTTP(0xdf6600?, {0xedd7b0?, 0xc000276000?}, 0x10?)
+	C:/Program Files/Go/src/net/http/server.go:2166 +0x29
+main.secureHeaders.func1({0xedd7b0, 0xc000276000}, 0xc00026e000)
+	D:/___dev___/go/projects/i-win/cmd/middleware.go:19 +0x3e5
+net/http.HandlerFunc.ServeHTTP(0xc000252e75?, {0xedd7b0?, 0xc000276000?}, 0xc00003da60?)
+	C:/Program Files/Go/src/net/http/server.go:2166 +0x29
+main.(*application).logRequest-fm.(*application).logRequest.func1({0xedd7b0, 0xc000276000}, 0xc00026e000)
+	D:/___dev___/go/projects/i-win/cmd/middleware.go:28 +0x15b
+net/http.HandlerFunc.ServeHTTP(0x9d1c7b?, {0xedd7b0?, 0xc000276000?}, 0xc00003db38?)
+	C:/Program Files/Go/src/net/http/server.go:2166 +0x29
+main.(*application).recoverPanic-fm.(*application).recoverPanic.func1({0xedd7b0?, 0xc000276000?}, 0x0?)
+	D:/___dev___/go/projects/i-win/cmd/middleware.go:42 +0x7c
+net/http.HandlerFunc.ServeHTTP(0x9d2025?, {0xedd7b0?, 0xc000276000?}, 0xc000276001?)
+	C:/Program Files/Go/src/net/http/server.go:2166 +0x29
+net/http.serverHandler.ServeHTTP({0xedc890?}, {0xedd7b0?, 0xc000276000?}, 0x6?)
+	C:/Program Files/Go/src/net/http/server.go:3137 +0x8e
+net/http.(*conn).serve(0xc000264000, {0xeddf98, 0xc00011c1e0})
+	C:/Program Files/Go/src/net/http/server.go:2039 +0x5e8
+created by net/http.(*Server).Serve in goroutine 6
+	C:/Program Files/Go/src/net/http/server.go:3285 +0x4b4
+ERROR	2024/08/14 16:36:44 handlers.go:104: illegal base64 data at input byte 8
+goroutine 82 [running]:
+runtime/debug.Stack()
+	C:/Program Files/Go/src/runtime/debug/stack.go:24 +0x5e
+main.(*application).serverError(0xc000106000, {0x151da30, 0xc000326000}, {0x151bd00?, 0x179b7a0?})
+	D:/___dev___/go/projects/i-win/cmd/helpers.go:28 +0x52
+main.(*application).upload(0xc000106000, {0x151da30, 0xc000326000}, 0xc0000be480)
+	D:/___dev___/go/projects/i-win/cmd/handlers.go:104 +0x196
+net/http.HandlerFunc.ServeHTTP(0xc0111c600?, {0x151da30?, 0xc000326000?}, 0x6?)
+	C:/Program Files/Go/src/net/http/server.go:2166 +0x29
+github.com/julienschmidt/httprouter.(*Router).HandlerFunc.(*Router).Handler.func1({0x151da30?, 0xc000326000?}, 0xc0002fee88?, {0x0?, 0xc0002a7840?, 0x101a065?})
+	C:/Users/dell/go/pkg/mod/github.com/julienschmidt/httprouter@v1.3.0/router.go:275 +0xee
+github.com/julienschmidt/httprouter.(*Router).ServeHTTP(0xc00010a000, {0x151da30, 0xc000326000}, 0xc0000be480)
+	C:/Users/dell/go/pkg/mod/github.com/julienschmidt/httprouter@v1.3.0/router.go:387 +0x7eb
+main.(*application).clearPostFormData-fm.(*application).clearPostFormData.func1({0x151da30, 0xc000326000}, 0xc0000be480)
+	D:/___dev___/go/projects/i-win/cmd/middleware.go:49 +0x42
+net/http.HandlerFunc.ServeHTTP(0x14366c0?, {0x151da30?, 0xc000326000?}, 0x10?)
+	C:/Program Files/Go/src/net/http/server.go:2166 +0x29
+main.secureHeaders.func1({0x151da30, 0xc000326000}, 0xc0000be480)
+	D:/___dev___/go/projects/i-win/cmd/middleware.go:19 +0x3e5
+net/http.HandlerFunc.ServeHTTP(0xc0002fee8d?, {0x151da30?, 0xc000326000?}, 0xc0002a7a60?)
+	C:/Program Files/Go/src/net/http/server.go:2166 +0x29
+main.(*application).logRequest-fm.(*application).logRequest.func1({0x151da30, 0xc000326000}, 0xc0000be480)
+	D:/___dev___/go/projects/i-win/cmd/middleware.go:28 +0x15b
+net/http.HandlerFunc.ServeHTTP(0x1011c7b?, {0x151da30?, 0xc000326000?}, 0xc0002a7b38?)
+	C:/Program Files/Go/src/net/http/server.go:2166 +0x29
+main.(*application).recoverPanic-fm.(*application).recoverPanic.func1({0x151da30?, 0xc000326000?}, 0x0?)
+	D:/___dev___/go/projects/i-win/cmd/middleware.go:42 +0x7c
+net/http.HandlerFunc.ServeHTTP(0x1012025?, {0x151da30?, 0xc000326000?}, 0xc000326001?)
+	C:/Program Files/Go/src/net/http/server.go:2166 +0x29
+net/http.serverHandler.ServeHTTP({0x151cb10?}, {0x151da30?, 0xc000326000?}, 0x6?)
+	C:/Program Files/Go/src/net/http/server.go:3137 +0x8e
+net/http.(*conn).serve(0xc0000dc120, {0x151e218, 0xc00020e1e0})
+	C:/Program Files/Go/src/net/http/server.go:2039 +0x5e8
+created by net/http.(*Server).Serve in goroutine 18
+	C:/Program Files/Go/src/net/http/server.go:3285 +0x4b4

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -16,30 +15,14 @@ import (
 	"github.com/grandcat/zeroconf"
 )
 
-/* --- STRUCT --- */
-
-// A collection of the server information
-type HostInfo struct {
-	HostName			string
-	IPAddr				net.IP
-	HWAddr				net.HardwareAddr
-	Iface					net.Interface
-}
-
-// A collection of the server services
-type application struct {
-	infoLog				*log.Logger
-	errorLog			*log.Logger
-	formDecoder		*form.Decoder
-	hostInfo			HostInfo
-	mDNSSvc				*zeroconf.Server
-}
-
 /* --- FILE PATHS --- */
 
-var dvPath string = "configs/devices/saved_devices.json"				// path to saved devices file
-var pDVPath string = "configs/devices/requested_devices.json"		// path to pending devices file
-var stPath string = "configs/settings/settings.json"						// path to settings file
+const (
+	DEVICES_FILE_PATH string = "configs/devices/saved_devices.json"
+	PENDING_DEVICES_FILE_PATH string = "configs/devices/requested_devices.json"
+	SETTINGS_FILE_PATH string = "configs/settings/settings.json"
+	TOKENS_FILE_PATH string = "configs/auth/tokens.json"
+)
 
 func main() { 
 	port := ":6789"

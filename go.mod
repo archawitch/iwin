@@ -9,6 +9,7 @@ require (
 
 require (
 	github.com/atotto/clipboard v0.1.4
+	github.com/google/uuid v1.6.0
 	github.com/grandcat/zeroconf v1.0.0
 	github.com/justinas/alice v1.2.0
 )

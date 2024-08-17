@@ -97,27 +97,28 @@
 
         if (!id || id == "") return;
 
-        fetch("/removeDevice", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: new URLSearchParams({
-            id: id,
-          }),
-        })
-          .then((response) => {
-            if (response.status === 200) {
-              alert("OK!");
-              window.location.href = "http://localhost:6789/devices";
-            } else {
-              alert("Failed!");
-            }
+        if (confirm("Are you sure to remove this device?")) {
+          fetch("/removeDevice", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+              id: id,
+            }),
           })
-          .catch((error) => {
-            console.log(error);
-            alert("Server error!");
-          });
+            .then((response) => {
+              if (response.status === 200) {
+                window.location.href = "http://localhost:6789/devices";
+              } else {
+                alert("Failed!");
+              }
+            })
+            .catch((error) => {
+              console.log(error);
+              alert("Server error!");
+            });
+        }
       });
     }
   </script>
