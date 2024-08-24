@@ -1,6 +1,6 @@
 # iWin (Windows)
 
-iWin is a tool for file sharing from iOS devices to Windows PCs. It is built with Go and Swift, and it follows the mDNS protocol and an HTTP-based Client-Server architecture. There are two parts that are used in this project: the first part is here and the other part is [iWin Share](https://github.com/archawitch/iwin-share).
+iWin is a tool for file sharing from iOS devices to Windows PCs. It is built with Go and Swift, and it follows the mDNS protocol and a RESTful architecture. There are two parts that are used in this project: the first part is here and the other part is [iWin Share](https://github.com/archawitch/iwin-share).
 
 ## Getting Started
 
